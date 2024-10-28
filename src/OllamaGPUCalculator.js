@@ -168,9 +168,9 @@ const OllamaGPUCalculator = () => {
                         id="gpu"
                         value={gpuModel}
                         onChange={(e) => setGpuModel(e.target.value)}
-                        style={{ 
-                            width: '100%', 
-                            padding: '12px', 
+                        style={{
+                            width: '100%',
+                            padding: '12px',
                             height: '50px',
                             fontSize: '16px',
                             borderRadius: '8px',
@@ -197,9 +197,9 @@ const OllamaGPUCalculator = () => {
                         id="gpuCount"
                         value={gpuCount}
                         onChange={(e) => setGpuCount(e.target.value)}
-                        style={{ 
-                            width: '100%', 
-                            padding: '12px', 
+                        style={{
+                            width: '100%',
+                            padding: '12px',
                             height: '50px',
                             fontSize: '16px',
                             borderRadius: '8px',
@@ -225,9 +225,9 @@ const OllamaGPUCalculator = () => {
                         id="quantization"
                         value={quantization}
                         onChange={(e) => setQuantization(e.target.value)}
-                        style={{ 
-                            width: '100%', 
-                            padding: '12px', 
+                        style={{
+                            width: '100%',
+                            padding: '12px',
                             height: '50px',
                             fontSize: '16px',
                             borderRadius: '8px',
@@ -261,13 +261,13 @@ const OllamaGPUCalculator = () => {
 
                 <button
                     type="submit"
-                    style={{ 
-                        width: '100%', 
-                        padding: '10px', 
-                        backgroundColor: '#3b82f6', 
-                        color: 'white', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                    style={{
+                        width: '100%',
+                        padding: '10px',
+                        backgroundColor: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '16px',
                         display: 'flex',
@@ -276,14 +276,14 @@ const OllamaGPUCalculator = () => {
                         gap: '8px'
                     }}
                 >
-                    <svg 
-                        width="20" 
-                        height="20" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
                         strokeLinejoin="round"
                     >
                         <rect x="4" y="2" width="16" height="20" rx="2" />
@@ -314,11 +314,11 @@ const OllamaGPUCalculator = () => {
                         </div>
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{ fontSize: '14px', fontWeight: 'normal', marginBottom: '2px', display: 'block' }}>Required System RAM:</label>
-                            <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#7c3aed', margin: '0 0 10px 0' }}>{results.systemRAM} GB</p>
+                            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c3aed', margin: '0 0 10px 0' }}>{results.systemRAM} GB</p>
                         </div>
                         <div>
                             <label style={{ fontSize: '14px', fontWeight: 'normal', marginBottom: '2px', display: 'block' }}>Estimated Performance:</label>
-                            <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#d97706', margin: '0 0 10px 0' }}>{results.tokensPerSecond} tokens/second</p>
+                            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#d97706', margin: '0 0 10px 0' }}>{results.tokensPerSecond} tokens/second</p>
                         </div>
                     </div>
                 </div>
