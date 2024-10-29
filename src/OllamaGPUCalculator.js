@@ -7,6 +7,8 @@ const OllamaGPUCalculator = () => {
     const [gpuModel, setGpuModel] = useState('');
     const [gpuCount, setGpuCount] = useState('1');
     const [results, setResults] = useState(null);
+    const [customGpuRam, setCustomGpuRam] = useState('');
+    const [useCustomGpu, setUseCustomGpu] = useState(false);
 
     const unsortedGpuSpecs = {
         'h100': { name: 'H100', vram: 80, generation: 'Hopper', tflops: 1000 },
@@ -45,7 +47,7 @@ const OllamaGPUCalculator = () => {
     );
 
     const calculateOllamaRAM = () => {
-        if (!parameters || !gpuModel) {
+        if (!parameters || (!gpuModel && !useCustomGpu) || (useCustomGpu && !customGpuRam)) {
             alert('Please enter all required fields');
             return;
         }
@@ -65,16 +67,24 @@ const OllamaGPUCalculator = () => {
         const systemRAMMultiplier = quantBits <= 8 ? 1.2 : 1.5;
         const totalSystemRAM = totalGPURAM * systemRAMMultiplier;
 
-        const selectedGPU = gpuSpecs[gpuModel];
-        const totalAvailableVRAM = selectedGPU.vram * numGPUs;
+        let totalAvailableVRAM, effectiveVRAM, estimatedTPS;
+        
+        if (useCustomGpu) {
+            totalAvailableVRAM = parseFloat(customGpuRam) * numGPUs;
+            const multiGpuEfficiency = numGPUs > 1 ? 0.9 : 1;
+            effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
+            estimatedTPS = null; // Don't calculate TPS for custom GPU
+        } else {
+            const selectedGPU = gpuSpecs[gpuModel];
+            totalAvailableVRAM = selectedGPU.vram * numGPUs;
+            const multiGpuEfficiency = numGPUs > 1 ? 0.9 : 1;
+            effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
+            const baseTPS = (selectedGPU.tflops * 1e12) / (6 * paramCount * 1e9) * 0.5;
+            const scaledTPS = baseTPS * numGPUs * multiGpuEfficiency;
+            estimatedTPS = Math.round(scaledTPS);
+        }
+
         const vramMargin = totalAvailableVRAM - totalGPURAM;
-
-        const multiGpuEfficiency = numGPUs > 1 ? 0.9 : 1;
-        const effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
-
-        const baseTPS = (selectedGPU.tflops * 1e12) / (6 * paramCount * 1e9) * 0.5;
-        const scaledTPS = baseTPS * numGPUs * multiGpuEfficiency;
-        const estimatedTPS = Math.round(scaledTPS);
 
         setResults({
             gpuRAM: totalGPURAM.toFixed(2),
@@ -85,7 +95,9 @@ const OllamaGPUCalculator = () => {
             vramMargin: vramMargin.toFixed(2),
             isCompatible: effectiveVRAM >= totalGPURAM,
             isBorderline: vramMargin > 0 && vramMargin < 2,
-            gpuConfig: `${numGPUs}x ${selectedGPU.name} (${totalAvailableVRAM}GB total)`,
+            gpuConfig: useCustomGpu 
+                ? `${numGPUs}x Custom GPU (${totalAvailableVRAM}GB total)` 
+                : `${numGPUs}x ${gpuSpecs[gpuModel].name} (${totalAvailableVRAM}GB total)`,
             tokensPerSecond: estimatedTPS
         });
     };
@@ -189,6 +201,42 @@ const OllamaGPUCalculator = () => {
                             </option>
                         ))}
                     </select>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', textAlign: 'left', fontSize: '16px' }}>
+                        <input
+                            type="checkbox"
+                            checked={useCustomGpu}
+                            onChange={(e) => {
+                                setUseCustomGpu(e.target.checked);
+                                if (!e.target.checked) {
+                                    setCustomGpuRam('');
+                                }
+                            }}
+                            style={{ marginRight: '8px' }}
+                        />
+                        Use Custom GPU RAM
+                    </label>
+                    {useCustomGpu && (
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <input
+                                type="number"
+                                placeholder="Enter GPU RAM"
+                                value={customGpuRam}
+                                onChange={(e) => setCustomGpuRam(e.target.value)}
+                                style={{ 
+                                    flex: 1, 
+                                    padding: '12px', 
+                                    height: '24px', 
+                                    fontSize: '16px', 
+                                    borderRadius: '8px', 
+                                    border: '1px solid #e5e7eb' 
+                                }}
+                            />
+                            <span style={{ marginLeft: '10px', fontSize: '16px' }}>GB</span>
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
@@ -316,10 +364,16 @@ const OllamaGPUCalculator = () => {
                             <label style={{ fontSize: '14px', fontWeight: 'normal', marginBottom: '2px', display: 'block' }}>Required System RAM:</label>
                             <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c3aed', margin: '0 0 10px 0' }}>{results.systemRAM} GB</p>
                         </div>
-                        <div>
-                            <label style={{ fontSize: '14px', fontWeight: 'normal', marginBottom: '2px', display: 'block' }}>Estimated Performance:</label>
-                            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#d97706', margin: '0 0 10px 0' }}>{results.tokensPerSecond} tokens/second</p>
-                        </div>
+                        {results.tokensPerSecond && (
+                            <div>
+                                <label style={{ fontSize: '14px', fontWeight: 'normal', marginBottom: '2px', display: 'block' }}>
+                                    Estimated Performance:
+                                </label>
+                                <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#d97706', margin: '0 0 10px 0' }}>
+                                    {results.tokensPerSecond} tokens/second
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
