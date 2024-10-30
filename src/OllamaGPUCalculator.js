@@ -95,9 +95,17 @@ const OllamaGPUCalculator = () => {
             const multiGpuEfficiency = numGPUs > 1 ? 0.9 : 1;
             effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
             
-            // Revised tokens per second calculation based on real-world data
-            const baseTPS = (selectedGPU.tflops * 1e12) / (6 * paramCount * 1e9) * 0.05; // Reduced efficiency factor
-            const scaledTPS = Math.min(baseTPS * numGPUs * multiGpuEfficiency, 200); // Cap at realistic maximum
+            // Base calculation for single GPU
+            const baseTPS = (selectedGPU.tflops * 1e12) / (6 * paramCount * 1e9) * 0.05;
+            
+            // Calculate cumulative TPS with diminishing returns per additional GPU
+            let totalTPS = baseTPS; // First GPU at 100%
+            for(let i = 1; i < numGPUs; i++) {
+                // Each additional GPU contributes at 90% efficiency
+                totalTPS += baseTPS * 0.9;
+            }
+            
+            const scaledTPS = Math.min(totalTPS, 200);
             estimatedTPS = Math.round(scaledTPS);
         }
 
