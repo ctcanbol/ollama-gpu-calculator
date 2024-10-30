@@ -94,8 +94,10 @@ const OllamaGPUCalculator = () => {
             totalAvailableVRAM = selectedGPU.vram * numGPUs;
             const multiGpuEfficiency = numGPUs > 1 ? 0.9 : 1;
             effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
-            const baseTPS = (selectedGPU.tflops * 1e12) / (6 * paramCount * 1e9) * 0.5;
-            const scaledTPS = baseTPS * numGPUs * multiGpuEfficiency;
+            
+            // Revised tokens per second calculation based on real-world data
+            const baseTPS = (selectedGPU.tflops * 1e12) / (6 * paramCount * 1e9) * 0.05; // Reduced efficiency factor
+            const scaledTPS = Math.min(baseTPS * numGPUs * multiGpuEfficiency, 200); // Cap at realistic maximum
             estimatedTPS = Math.round(scaledTPS);
         }
 
