@@ -52,18 +52,33 @@ const OllamaGPUCalculator = () => {
             return;
         }
 
+        // Convert user inputs to numbers
         const paramCount = parseFloat(parameters);
         const quantBits = parseInt(quantization);
         const numGPUs = parseInt(gpuCount);
 
+        // Calculate base model size in GB
+        // Formula: (params * bits * 1B) / (8 bits/byte * 1024^3 bytes/GB)
+        // This represents the minimum memory needed to store the model weights
         const baseModelSizeGB = (paramCount * quantBits * 1000000000) / (8 * 1024 * 1024 * 1024);
 
+        // Calculate hidden size (d_model) from parameter count
+        // Most transformer models follow: params ≈ 6 * d_model^2
+        // Therefore, d_model ≈ sqrt(params/6)
         const hiddenSize = Math.sqrt(paramCount * 1000000000 / 6);
+
+        // Calculate KV cache size in GB
+        // Formula: (2 * hidden_size * context_length * 2 * bits_per_weight) / 8 bits/byte / 1024^3
+        // - 2: for both key and value caches
+        // - Second 2: for both forward and backward passes
         const kvCacheSize = (2 * hiddenSize * contextLength * 2 * quantBits / 8) / (1024 * 1024 * 1024);
 
+        // Add 10% overhead for CUDA kernels, gradients, and other GPU operations
         const gpuOverhead = baseModelSizeGB * 0.1;
         const totalGPURAM = baseModelSizeGB + kvCacheSize + gpuOverhead;
 
+        // System RAM requirements vary based on quantization
+        // Lower bit models (INT4/8) need less overhead than FP16/32
         const systemRAMMultiplier = quantBits <= 8 ? 1.2 : 1.5;
         const totalSystemRAM = totalGPURAM * systemRAMMultiplier;
 
