@@ -46,83 +46,93 @@ const OllamaGPUCalculator = () => {
             })
     );
 
+    const calculateRAMRequirements = (paramCount, quantBits, contextLength, numGPUs, customGpuRam, gpuModel, useCustomGpu) => {
+        // Calculate base model size in GB
+        const baseModelSizeGB = (paramCount * quantBits * 1000000000) / (8 * 1024 * 1024 * 1024);
+
+        // Calculate hidden size (d_model)
+        const hiddenSize = Math.sqrt(paramCount * 1000000000 / 6);
+
+        // Calculate KV cache size in GB
+        const kvCacheSize = (2 * hiddenSize * contextLength * 2 * quantBits / 8) / (1024 * 1024 * 1024);
+
+        // Add GPU overhead
+        const gpuOverhead = baseModelSizeGB * 0.1;
+        const totalGPURAM = baseModelSizeGB + kvCacheSize + gpuOverhead;
+
+        // Calculate system RAM requirements
+        const systemRAMMultiplier = quantBits <= 8 ? 1.2 : 1.5;
+        const totalSystemRAM = totalGPURAM * systemRAMMultiplier;
+
+        // Calculate available VRAM
+        let totalAvailableVRAM, effectiveVRAM;
+        if (useCustomGpu) {
+            totalAvailableVRAM = parseFloat(customGpuRam) * numGPUs;
+        } else {
+            totalAvailableVRAM = gpuSpecs[gpuModel].vram * numGPUs;
+        }
+        const multiGpuEfficiency = numGPUs > 1 ? 0.9 : 1;
+        effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
+
+        return {
+            baseModelSizeGB,
+            kvCacheSize,
+            totalGPURAM,
+            totalSystemRAM,
+            totalAvailableVRAM,
+            effectiveVRAM,
+            vramMargin: totalAvailableVRAM - totalGPURAM
+        };
+    };
+
+    const calculateTokensPerSecond = (paramCount, numGPUs, gpuModel) => {
+        if (!gpuModel) return null;
+
+        const selectedGPU = gpuSpecs[gpuModel];
+        const baseTPS = (selectedGPU.tflops * 1e12) / (6 * paramCount * 1e9) * 0.05;
+        
+        let totalTPS = baseTPS;
+        for(let i = 1; i < numGPUs; i++) {
+            totalTPS += baseTPS * 0.9;
+        }
+        
+        return Math.round(Math.min(totalTPS, 200));
+    };
+
     const calculateOllamaRAM = () => {
         if (!parameters || (!gpuModel && !useCustomGpu) || (useCustomGpu && !customGpuRam)) {
             alert('Please enter all required fields');
             return;
         }
 
-        // Convert user inputs to numbers
         const paramCount = parseFloat(parameters);
         const quantBits = parseInt(quantization);
         const numGPUs = parseInt(gpuCount);
 
-        // Calculate base model size in GB
-        // Formula: (params * bits * 1B) / (8 bits/byte * 1024^3 bytes/GB)
-        // This represents the minimum memory needed to store the model weights
-        const baseModelSizeGB = (paramCount * quantBits * 1000000000) / (8 * 1024 * 1024 * 1024);
+        const ramCalc = calculateRAMRequirements(
+            paramCount,
+            quantBits,
+            contextLength,
+            numGPUs,
+            customGpuRam,
+            gpuModel,
+            useCustomGpu
+        );
 
-        // Calculate hidden size (d_model) from parameter count
-        // Most transformer models follow: params ≈ 6 * d_model^2
-        // Therefore, d_model ≈ sqrt(params/6)
-        const hiddenSize = Math.sqrt(paramCount * 1000000000 / 6);
-
-        // Calculate KV cache size in GB
-        // Formula: (2 * hidden_size * context_length * 2 * bits_per_weight) / 8 bits/byte / 1024^3
-        // - 2: for both key and value caches
-        // - Second 2: for both forward and backward passes
-        const kvCacheSize = (2 * hiddenSize * contextLength * 2 * quantBits / 8) / (1024 * 1024 * 1024);
-
-        // Add 10% overhead for CUDA kernels, gradients, and other GPU operations
-        const gpuOverhead = baseModelSizeGB * 0.1;
-        const totalGPURAM = baseModelSizeGB + kvCacheSize + gpuOverhead;
-
-        // System RAM requirements vary based on quantization
-        // Lower bit models (INT4/8) need less overhead than FP16/32
-        const systemRAMMultiplier = quantBits <= 8 ? 1.2 : 1.5;
-        const totalSystemRAM = totalGPURAM * systemRAMMultiplier;
-
-        let totalAvailableVRAM, effectiveVRAM, estimatedTPS;
-        
-        if (useCustomGpu) {
-            totalAvailableVRAM = parseFloat(customGpuRam) * numGPUs;
-            const multiGpuEfficiency = numGPUs > 1 ? 0.9 : 1;
-            effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
-            estimatedTPS = null; // Don't calculate TPS for custom GPU
-        } else {
-            const selectedGPU = gpuSpecs[gpuModel];
-            totalAvailableVRAM = selectedGPU.vram * numGPUs;
-            const multiGpuEfficiency = numGPUs > 1 ? 0.9 : 1;
-            effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
-            
-            // Base calculation for single GPU
-            const baseTPS = (selectedGPU.tflops * 1e12) / (6 * paramCount * 1e9) * 0.05;
-            
-            // Calculate cumulative TPS with diminishing returns per additional GPU
-            let totalTPS = baseTPS; // First GPU at 100%
-            for(let i = 1; i < numGPUs; i++) {
-                // Each additional GPU contributes at 90% efficiency
-                totalTPS += baseTPS * 0.9;
-            }
-            
-            const scaledTPS = Math.min(totalTPS, 200);
-            estimatedTPS = Math.round(scaledTPS);
-        }
-
-        const vramMargin = totalAvailableVRAM - totalGPURAM;
+        const estimatedTPS = useCustomGpu ? null : calculateTokensPerSecond(paramCount, numGPUs, gpuModel);
 
         setResults({
-            gpuRAM: totalGPURAM.toFixed(2),
-            systemRAM: totalSystemRAM.toFixed(2),
-            modelSize: baseModelSizeGB.toFixed(2),
-            kvCache: kvCacheSize.toFixed(2),
-            availableVRAM: effectiveVRAM.toFixed(2),
-            vramMargin: vramMargin.toFixed(2),
-            isCompatible: effectiveVRAM >= totalGPURAM,
-            isBorderline: vramMargin > 0 && vramMargin < 2,
+            gpuRAM: ramCalc.totalGPURAM.toFixed(2),
+            systemRAM: ramCalc.totalSystemRAM.toFixed(2),
+            modelSize: ramCalc.baseModelSizeGB.toFixed(2),
+            kvCache: ramCalc.kvCacheSize.toFixed(2),
+            availableVRAM: ramCalc.effectiveVRAM.toFixed(2),
+            vramMargin: ramCalc.vramMargin.toFixed(2),
+            isCompatible: ramCalc.effectiveVRAM >= ramCalc.totalGPURAM,
+            isBorderline: ramCalc.vramMargin > 0 && ramCalc.vramMargin < 2,
             gpuConfig: useCustomGpu 
-                ? `${numGPUs}x Custom GPU (${totalAvailableVRAM}GB total)` 
-                : `${numGPUs}x ${gpuSpecs[gpuModel].name} (${totalAvailableVRAM}GB total)`,
+                ? `${numGPUs}x Custom GPU (${ramCalc.totalAvailableVRAM}GB total)` 
+                : `${numGPUs}x ${gpuSpecs[gpuModel].name} (${ramCalc.totalAvailableVRAM}GB total)`,
             tokensPerSecond: estimatedTPS
         });
     };
