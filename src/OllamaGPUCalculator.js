@@ -32,6 +32,10 @@ const OllamaGPUCalculator = () => {
         'teslap40': { name: 'Tesla P40', vram: 24, generation: 'Pascal', tflops: 12 },
         'gtx1070': { name: 'GTX 1070', vram: 8, generation: 'Pascal', tflops: 6.5 },
         'gtx1060': { name: 'GTX 1060', vram: 6, generation: 'Pascal', tflops: 4.4 },
+        'm4': { name: 'Apple M4', vram: 16, generation: 'Apple Silicon', tflops: 4.6 },
+        'm3': { name: 'Apple M3', vram: 8, generation: 'Apple Silicon', tflops: 4.1 },
+        'm2': { name: 'Apple M2', vram: 8, generation: 'Apple Silicon', tflops: 3.6 },
+        'm1': { name: 'Apple M1', vram: 8, generation: 'Apple Silicon', tflops: 2.6 },
     };
 
     const gpuSpecs = Object.fromEntries(
