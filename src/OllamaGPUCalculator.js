@@ -89,15 +89,23 @@ const OllamaGPUCalculator = () => {
         };
     };
 
-    const calculateTokensPerSecond = (paramCount, numGPUs, gpuModel) => {
+    const calculateTokensPerSecond = (paramCount, numGPUs, gpuModel, quantization) => {
         if (!gpuModel) return null;
 
         const selectedGPU = gpuSpecs[gpuModel];
         const baseTPS = (selectedGPU.tflops * 1e12) / (6 * paramCount * 1e9) * 0.05;
         
-        let totalTPS = baseTPS;
+        // Adjust TPS based on quantization level
+        let quantizationFactor = 1;
+        if (quantization === '8') {
+            quantizationFactor = 1.2; // Example factor for 8-bit
+        } else if (quantization === '4') {
+            quantizationFactor = 1.5; // Example factor for 4-bit
+        }
+
+        let totalTPS = baseTPS * quantizationFactor;
         for(let i = 1; i < numGPUs; i++) {
-            totalTPS += baseTPS * 0.9;
+            totalTPS += baseTPS * 0.9 * quantizationFactor;
         }
         
         return Math.round(Math.min(totalTPS, 200));
@@ -123,7 +131,7 @@ const OllamaGPUCalculator = () => {
             useCustomGpu
         );
 
-        const estimatedTPS = useCustomGpu ? null : calculateTokensPerSecond(paramCount, numGPUs, gpuModel);
+        const estimatedTPS = useCustomGpu ? null : calculateTokensPerSecond(paramCount, numGPUs, gpuModel, quantization);
 
         setResults({
             gpuRAM: ramCalc.totalGPURAM.toFixed(2),
