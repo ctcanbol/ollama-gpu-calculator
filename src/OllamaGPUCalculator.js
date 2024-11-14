@@ -36,6 +36,11 @@ const OllamaGPUCalculator = () => {
         'm3': { name: 'Apple M3', vram: 8, generation: 'Apple Silicon', tflops: 4.1 },
         'm2': { name: 'Apple M2', vram: 8, generation: 'Apple Silicon', tflops: 3.6 },
         'm1': { name: 'Apple M1', vram: 8, generation: 'Apple Silicon', tflops: 2.6 },
+        'rx7900xtx': { name: 'Radeon RX 7900 XTX', vram: 24, generation: 'RDNA3', tflops: 61 },
+        'rx7900xt': { name: 'Radeon RX 7900 XT', vram: 20, generation: 'RDNA3', tflops: 52 },
+        'rx7900gre': { name: 'Radeon RX 7900 GRE', vram: 16, generation: 'RDNA3', tflops: 46 },
+        'rx7800xt': { name: 'Radeon RX 7800 XT', vram: 16, generation: 'RDNA3', tflops: 37 },
+        'rx7700xt': { name: 'Radeon RX 7700 XT', vram: 12, generation: 'RDNA3', tflops: 35 },
     };
 
     const gpuSpecs = Object.fromEntries(
