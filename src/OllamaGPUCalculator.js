@@ -5,11 +5,8 @@ const OllamaGPUCalculator = () => {
     const [parameters, setParameters] = useState('');
     const [quantization, setQuantization] = useState('16');
     const [contextLength, setContextLength] = useState(4096);
-    const [gpuModel, setGpuModel] = useState('');
-    const [gpuCount, setGpuCount] = useState('1');
+    const [gpuConfigs, setGpuConfigs] = useState([{ gpuModel: '', count: '1' }]);
     const [results, setResults] = useState(null);
-    const [customGpuRam, setCustomGpuRam] = useState('');
-    const [useCustomGpu, setUseCustomGpu] = useState(false);
 
     const unsortedGpuSpecs = {
         'h100': { name: 'H100', vram: 80, generation: 'Hopper', tflops: 1000 },
@@ -56,7 +53,7 @@ const OllamaGPUCalculator = () => {
             })
     );
 
-    const calculateRAMRequirements = (paramCount, quantBits, contextLength, numGPUs, customGpuRam, gpuModel, useCustomGpu) => {
+    const calculateRAMRequirements = (paramCount, quantBits, contextLength, gpuConfigs) => {
         // Calculate base model size in GB
         const baseModelSizeGB = (paramCount * quantBits * 1000000000) / (8 * 1024 * 1024 * 1024);
 
@@ -74,15 +71,18 @@ const OllamaGPUCalculator = () => {
         const systemRAMMultiplier = quantBits <= 8 ? 1.2 : 1.5;
         const totalSystemRAM = totalGPURAM * systemRAMMultiplier;
 
-        // Calculate available VRAM
-        let totalAvailableVRAM, effectiveVRAM;
-        if (useCustomGpu) {
-            totalAvailableVRAM = parseFloat(customGpuRam) * numGPUs;
-        } else {
-            totalAvailableVRAM = gpuSpecs[gpuModel].vram * numGPUs;
-        }
-        const multiGpuEfficiency = numGPUs > 1 ? 0.9 : 1;
-        effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
+        // Calculate total available VRAM across all GPU configs
+        let totalAvailableVRAM = 0;
+        gpuConfigs.forEach(config => {
+            if (config.gpuModel) {
+                const numGPUs = parseInt(config.count);
+                const gpuVRAM = gpuSpecs[config.gpuModel].vram * numGPUs;
+                totalAvailableVRAM += gpuVRAM;
+            }
+        });
+
+        const multiGpuEfficiency = totalAvailableVRAM > gpuConfigs[0].vram ? 0.9 : 1;
+        const effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
 
         return {
             baseModelSizeGB,
@@ -118,8 +118,13 @@ const OllamaGPUCalculator = () => {
     };
 
     const calculateOllamaRAM = () => {
-        if (!parameters || (!gpuModel && !useCustomGpu) || (useCustomGpu && !customGpuRam)) {
-            alert('Please enter all required fields');
+        if (!parameters) {
+            alert('Please enter the number of parameters');
+            return;
+        }
+
+        if (!gpuConfigs.some(config => config.gpuModel)) {
+            alert('Please select at least one GPU model');
             return;
         }
 
@@ -127,25 +132,39 @@ const OllamaGPUCalculator = () => {
         ReactGA.event({
             category: 'Calculator',
             action: 'Calculate',
-            label: useCustomGpu ? 'Custom GPU' : gpuSpecs[gpuModel].name,
+            label: 'Mixed GPU Configuration',
             value: parseInt(parameters)
         });
 
         const paramCount = parseFloat(parameters);
         const quantBits = parseInt(quantization);
-        const numGPUs = parseInt(gpuCount);
 
         const ramCalc = calculateRAMRequirements(
             paramCount,
             quantBits,
             contextLength,
-            numGPUs,
-            customGpuRam,
-            gpuModel,
-            useCustomGpu
+            gpuConfigs
         );
 
-        const estimatedTPS = useCustomGpu ? null : calculateTokensPerSecond(paramCount, numGPUs, gpuModel, quantization);
+        // Calculate total tokens per second across all GPUs
+        let totalTPS = 0;
+        gpuConfigs.forEach(config => {
+            if (config.gpuModel) {
+                const gpuTPS = calculateTokensPerSecond(
+                    paramCount,
+                    parseInt(config.count),
+                    config.gpuModel,
+                    quantization
+                );
+                totalTPS += gpuTPS;
+            }
+        });
+
+        // Format GPU configuration string
+        const gpuConfigString = gpuConfigs
+            .filter(config => config.gpuModel)
+            .map(config => `${config.count}x ${gpuSpecs[config.gpuModel].name}`)
+            .join(' + ');
 
         setResults({
             gpuRAM: ramCalc.totalGPURAM.toFixed(2),
@@ -156,10 +175,8 @@ const OllamaGPUCalculator = () => {
             vramMargin: ramCalc.vramMargin.toFixed(2),
             isCompatible: ramCalc.effectiveVRAM >= ramCalc.totalGPURAM,
             isBorderline: ramCalc.vramMargin > 0 && ramCalc.vramMargin < 2,
-            gpuConfig: useCustomGpu 
-                ? `${numGPUs}x Custom GPU (${ramCalc.totalAvailableVRAM}GB total)` 
-                : `${numGPUs}x ${gpuSpecs[gpuModel].name} (${ramCalc.totalAvailableVRAM}GB total)`,
-            tokensPerSecond: estimatedTPS
+            gpuConfig: gpuConfigString,
+            tokensPerSecond: Math.round(Math.min(totalTPS, 200))
         });
     };
 
@@ -236,6 +253,21 @@ const OllamaGPUCalculator = () => {
         });
     };
 
+    const addGpuConfig = () => {
+        setGpuConfigs([...gpuConfigs, { gpuModel: '', count: '1' }]);
+    };
+
+    const removeGpuConfig = (index) => {
+        const newConfigs = gpuConfigs.filter((_, i) => i !== index);
+        setGpuConfigs(newConfigs);
+    };
+
+    const updateGpuConfig = (index, field, value) => {
+        const newConfigs = [...gpuConfigs];
+        newConfigs[index] = { ...newConfigs[index], [field]: value };
+        setGpuConfigs(newConfigs);
+    };
+
     return (
         <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
             <h2 style={{ marginBottom: '30px' }}>Ollama GPU Compatibility Calculator</h2>
@@ -256,96 +288,100 @@ const OllamaGPUCalculator = () => {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                    <label htmlFor="gpu" style={{ display: 'block', marginBottom: '5px', textAlign: 'left', fontSize: '16px' }}>GPU Model</label>
-                    <select
-                        id="gpu"
-                        value={gpuModel}
-                        onChange={(e) => setGpuModel(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            height: '50px',
-                            fontSize: '16px',
-                            borderRadius: '8px',
-                            border: '1px solid #e5e7eb',
-                            appearance: 'none',
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                            backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'right 12px center',
-                            backgroundColor: 'white'
-                        }}
-                    >
-                        <option value="">Select GPU model</option>
-                        {Object.entries(gpuSpecs).map(([key, gpu]) => (
-                            <option key={key} value={key}>
-                                {gpu.name} ({gpu.vram}GB)
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', textAlign: 'left', fontSize: '16px' }}>
-                        <input
-                            type="checkbox"
-                            checked={useCustomGpu}
-                            onChange={(e) => {
-                                setUseCustomGpu(e.target.checked);
-                                if (!e.target.checked) {
-                                    setCustomGpuRam('');
-                                }
-                            }}
-                            style={{ marginRight: '8px' }}
-                        />
-                        Use Custom GPU RAM
-                    </label>
-                    {useCustomGpu && (
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <input
-                                type="number"
-                                placeholder="Enter GPU RAM"
-                                value={customGpuRam}
-                                onChange={(e) => setCustomGpuRam(e.target.value)}
-                                style={{ 
-                                    flex: 1, 
-                                    padding: '12px', 
-                                    height: '24px', 
-                                    fontSize: '16px', 
-                                    borderRadius: '8px', 
-                                    border: '1px solid #e5e7eb' 
+                    <label style={{ display: 'block', marginBottom: '5px', textAlign: 'left', fontSize: '16px' }}>GPU Configuration</label>
+                    {gpuConfigs.map((config, index) => (
+                        <div key={index} style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            marginBottom: '10px', 
+                            alignItems: 'center',
+                            width: '100%'
+                        }}>
+                            <select
+                                value={config.gpuModel}
+                                onChange={(e) => updateGpuConfig(index, 'gpuModel', e.target.value)}
+                                style={{
+                                    width: '380px',
+                                    padding: '12px',
+                                    height: '50px',
+                                    fontSize: '16px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e5e7eb',
+                                    appearance: 'none',
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundPosition: 'right 12px center',
+                                    backgroundColor: 'white'
                                 }}
-                            />
-                            <span style={{ marginLeft: '10px', fontSize: '16px' }}>GB</span>
+                            >
+                                <option value="">Select GPU model</option>
+                                {Object.entries(gpuSpecs).map(([key, gpu]) => (
+                                    <option key={key} value={key}>
+                                        {gpu.name} ({gpu.vram}GB)
+                                    </option>
+                                ))}
+                            </select>
+                            <select
+                                value={config.count}
+                                onChange={(e) => updateGpuConfig(index, 'count', e.target.value)}
+                                style={{
+                                    width: '120px',
+                                    padding: '12px',
+                                    height: '50px',
+                                    fontSize: '16px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e5e7eb',
+                                    appearance: 'none',
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundPosition: 'right 12px center',
+                                    backgroundColor: 'white'
+                                }}
+                            >
+                                {[1, 2, 3, 4, 8].map((count) => (
+                                    <option key={count} value={count.toString()}>
+                                        {count} GPU{count > 1 ? 's' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            {index > 0 && (
+                                <div style={{ marginLeft: 'auto' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeGpuConfig(index)}
+                                        style={{
+                                            width: '80px',
+                                            height: '50px',
+                                            padding: '8px',
+                                            backgroundColor: '#ef4444',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontSize: '14px'
+                                        }}
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                    <label htmlFor="gpuCount" style={{ display: 'block', marginBottom: '5px', textAlign: 'left', fontSize: '16px' }}>Number of GPUs</label>
-                    <select
-                        id="gpuCount"
-                        value={gpuCount}
-                        onChange={(e) => setGpuCount(e.target.value)}
+                    ))}
+                    <button
+                        type="button"
+                        onClick={addGpuConfig}
                         style={{
-                            width: '100%',
-                            padding: '12px',
-                            height: '50px',
-                            fontSize: '16px',
+                            padding: '8px 16px',
+                            backgroundColor: '#10b981',
+                            color: 'white',
+                            border: 'none',
                             borderRadius: '8px',
-                            border: '1px solid #e5e7eb',
-                            appearance: 'none',
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                            backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'right 12px center',
-                            backgroundColor: 'white'
+                            cursor: 'pointer',
+                            marginTop: '10px'
                         }}
                     >
-                        {[1, 2, 3, 4, 8].map((count) => (
-                            <option key={count} value={count.toString()}>
-                                {count} GPU{count > 1 ? 's' : ''}
-                            </option>
-                        ))}
-                    </select>
+                        + Add Another GPU
+                    </button>
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
