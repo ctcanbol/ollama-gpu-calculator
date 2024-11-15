@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactGA from 'react-ga4';
 
 const OllamaGPUCalculator = () => {
     const [parameters, setParameters] = useState('');
@@ -122,6 +123,14 @@ const OllamaGPUCalculator = () => {
             return;
         }
 
+        // Track calculation event
+        ReactGA.event({
+            category: 'Calculator',
+            action: 'Calculate',
+            label: useCustomGpu ? 'Custom GPU' : gpuSpecs[gpuModel].name,
+            value: parseInt(parameters)
+        });
+
         const paramCount = parseFloat(parameters);
         const quantBits = parseInt(quantization);
         const numGPUs = parseInt(gpuCount);
@@ -205,6 +214,26 @@ const OllamaGPUCalculator = () => {
                 </div>
             );
         }
+    };
+
+    // Add tracking to quantization changes
+    const handleQuantizationChange = (value) => {
+        setQuantization(value);
+        ReactGA.event({
+            category: 'Settings',
+            action: 'Change Quantization',
+            label: `${value}-bit`
+        });
+    };
+
+    // Add tracking to context length changes
+    const handleContextLengthChange = (value) => {
+        setContextLength(parseInt(value));
+        ReactGA.event({
+            category: 'Settings',
+            action: 'Change Context Length',
+            label: `${value} tokens`
+        });
     };
 
     return (
@@ -324,7 +353,7 @@ const OllamaGPUCalculator = () => {
                     <select
                         id="quantization"
                         value={quantization}
-                        onChange={(e) => setQuantization(e.target.value)}
+                        onChange={(e) => handleQuantizationChange(e.target.value)}
                         style={{
                             width: '100%',
                             padding: '12px',
@@ -350,7 +379,7 @@ const OllamaGPUCalculator = () => {
                     <label style={{ display: 'block', marginBottom: '5px', textAlign: 'left', fontSize: '16px' }}>Context Length: {contextLength}</label>
                     <select
                         value={contextLength}
-                        onChange={(e) => setContextLength(parseInt(e.target.value))}
+                        onChange={(e) => handleContextLengthChange(e.target.value)}
                         style={{
                             width: '100%',
                             padding: '12px',
