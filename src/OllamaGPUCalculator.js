@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactGA from 'react-ga4';
 
 const OllamaGPUCalculator = () => {
@@ -7,6 +7,18 @@ const OllamaGPUCalculator = () => {
     const [contextLength, setContextLength] = useState(4096);
     const [gpuConfigs, setGpuConfigs] = useState([{ gpuModel: '', count: '1' }]);
     const [results, setResults] = useState(null);
+
+    useEffect(() => {
+        if (parameters && gpuConfigs.some(config => config.gpuModel)) {
+            calculateOllamaRAM();
+        }
+    }, [
+        parameters,
+        quantization,
+        contextLength,
+        gpuConfigs,
+        // Add any other state variables that should trigger recalculation
+    ]);
 
     const unsortedGpuSpecs = {
         'h100': { name: 'H100', vram: 80, generation: 'Hopper', tflops: 1000 },
@@ -182,7 +194,6 @@ const OllamaGPUCalculator = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        calculateOllamaRAM();
     };
 
     const getCompatibilityMessage = () => {
@@ -437,41 +448,6 @@ const OllamaGPUCalculator = () => {
                         ))}
                     </select>
                 </div>
-
-                <button
-                    type="submit"
-                    style={{
-                        width: '100%',
-                        padding: '10px',
-                        backgroundColor: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '16px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px'
-                    }}
-                >
-                    <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    >
-                        <rect x="4" y="2" width="16" height="20" rx="2" />
-                        <line x1="8" y1="6" x2="16" y2="6" />
-                        <line x1="8" y1="12" x2="16" y2="12" />
-                        <line x1="8" y1="18" x2="16" y2="18" />
-                    </svg>
-                    Check Compatibility
-                </button>
             </form>
 
             {results && (
