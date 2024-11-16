@@ -132,13 +132,23 @@ const OllamaGPUCalculator = () => {
     };
 
     const calculateOllamaRAM = () => {
-        if (!parameters) {
-            alert('Please enter the number of parameters');
+        // Input validation
+        if (!parameters || isNaN(parameters) || parameters <= 0) {
+            alert('Please enter a valid number of parameters greater than 0');
             return;
         }
 
         if (!gpuConfigs.some(config => config.gpuModel)) {
             alert('Please select at least one GPU model');
+            return;
+        }
+
+        // Validate GPU counts
+        const invalidGpuCount = gpuConfigs.some(config => 
+            config.gpuModel && (parseInt(config.count) <= 0 || isNaN(parseInt(config.count)))
+        );
+        if (invalidGpuCount) {
+            alert('Invalid GPU count detected. Please check your GPU configuration.');
             return;
         }
 
@@ -153,45 +163,50 @@ const OllamaGPUCalculator = () => {
         const paramCount = parseFloat(parameters);
         const quantBits = parseInt(quantization);
 
-        const ramCalc = calculateRAMRequirements(
-            paramCount,
-            quantBits,
-            contextLength,
-            gpuConfigs
-        );
+        try {
+            const ramCalc = calculateRAMRequirements(
+                paramCount,
+                quantBits,
+                contextLength,
+                gpuConfigs
+            );
 
-        // Calculate total tokens per second across all GPUs
-        let totalTPS = 0;
-        gpuConfigs.forEach(config => {
-            if (config.gpuModel) {
-                const gpuTPS = calculateTokensPerSecond(
-                    paramCount,
-                    parseInt(config.count),
-                    config.gpuModel,
-                    quantization
-                );
-                totalTPS += gpuTPS;
-            }
-        });
+            // Calculate total tokens per second across all GPUs
+            let totalTPS = 0;
+            gpuConfigs.forEach(config => {
+                if (config.gpuModel) {
+                    const gpuTPS = calculateTokensPerSecond(
+                        paramCount,
+                        parseInt(config.count),
+                        config.gpuModel,
+                        quantization
+                    );
+                    totalTPS += gpuTPS || 0; // Handle null return value
+                }
+            });
 
-        // Format GPU configuration string
-        const gpuConfigString = gpuConfigs
-            .filter(config => config.gpuModel)
-            .map(config => `${config.count}x ${gpuSpecs[config.gpuModel].name}`)
-            .join(' + ');
+            // Format GPU configuration string
+            const gpuConfigString = gpuConfigs
+                .filter(config => config.gpuModel)
+                .map(config => `${config.count}x ${gpuSpecs[config.gpuModel].name}`)
+                .join(' + ');
 
-        setResults({
-            gpuRAM: ramCalc.totalGPURAM.toFixed(2),
-            systemRAM: ramCalc.totalSystemRAM.toFixed(2),
-            modelSize: ramCalc.baseModelSizeGB.toFixed(2),
-            kvCache: ramCalc.kvCacheSize.toFixed(2),
-            availableVRAM: ramCalc.effectiveVRAM.toFixed(2),
-            vramMargin: ramCalc.vramMargin.toFixed(2),
-            isCompatible: ramCalc.effectiveVRAM >= ramCalc.totalGPURAM,
-            isBorderline: ramCalc.vramMargin > 0 && ramCalc.vramMargin < 2,
-            gpuConfig: gpuConfigString,
-            tokensPerSecond: Math.round(Math.min(totalTPS, 200))
-        });
+            setResults({
+                gpuRAM: ramCalc.totalGPURAM.toFixed(2),
+                systemRAM: ramCalc.totalSystemRAM.toFixed(2),
+                modelSize: ramCalc.baseModelSizeGB.toFixed(2),
+                kvCache: ramCalc.kvCacheSize.toFixed(2),
+                availableVRAM: ramCalc.effectiveVRAM.toFixed(2),
+                vramMargin: ramCalc.vramMargin.toFixed(2),
+                isCompatible: ramCalc.effectiveVRAM >= ramCalc.totalGPURAM,
+                isBorderline: ramCalc.vramMargin > 0 && ramCalc.vramMargin < 2,
+                gpuConfig: gpuConfigString,
+                tokensPerSecond: Math.round(Math.min(totalTPS, 200))
+            });
+        } catch (error) {
+            console.error('Calculation error:', error);
+            alert('An error occurred during calculations. Please check your inputs and try again.');
+        }
     };
 
     const handleSubmit = (e) => {
