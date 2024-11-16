@@ -93,7 +93,9 @@ const OllamaGPUCalculator = () => {
             }
         });
 
-        const multiGpuEfficiency = totalAvailableVRAM > gpuConfigs[0].vram ? 0.9 : 1;
+        // Fix: Check if using multiple GPUs by comparing against first GPU's VRAM
+        const firstGpuVRAM = gpuConfigs[0].gpuModel ? gpuSpecs[gpuConfigs[0].gpuModel].vram : 0;
+        const multiGpuEfficiency = totalAvailableVRAM > firstGpuVRAM ? 0.9 : 1;
         const effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
 
         return {
