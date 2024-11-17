@@ -1,6 +1,25 @@
-# Getting Started with Create React App
+# Ollama GPU Calculator
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A web application that helps users determine if their GPU meets the VRAM requirements for running various Ollama LLM models. Check it out at [http://aleibovici.github.io/ollama-gpu-calculator/](http://aleibovici.github.io/ollama-gpu-calculator/).
+
+## About
+
+This calculator helps you:
+- Check if your GPU has sufficient VRAM for specific Ollama models
+- Compare different LLM model requirements
+- Determine approximate GPU specifications needed for your desired models
+- Optimize model selection based on your available hardware
+
+Join the discussion about this tool on [Reddit](https://www.reddit.com/r/ollama/comments/1gdux20/ollama_gpu_compatibility_calculator/).
+
+## GPU Requirements
+
+Different Ollama models have varying VRAM requirements:
+- Smaller models (3B-7B parameters) typically need 4-8GB VRAM
+- Medium models (13B parameters) usually require 8-16GB VRAM
+- Larger models (30B-65B parameters) need 24GB+ VRAM
+
+Use this calculator to get ballpark estimates for your specific use case.
 
 ## Available Scripts
 
@@ -39,32 +58,12 @@ Instead, it will copy all the configuration files and the transitive dependencie
 
 You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
+## Contributing
+
+Feel free to open issues or submit pull requests if you'd like to contribute to this project.
+
 ## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+To learn more about Ollama, visit the [official Ollama documentation](https://ollama.ai/docs).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+For React documentation, check out the [React documentation](https://reactjs.org/).
