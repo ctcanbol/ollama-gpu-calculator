@@ -179,6 +179,39 @@ const OllamaGPUCalculator = () => {
                 gpuConfigs
             );
 
+            // Generate warnings based on configuration
+            let warnings = [];
+            
+            // Context length warnings
+            if (contextLength > 32768 && quantization === '16') {
+                warnings.push('Long context with FP16 may require significant VRAM');
+            }
+            
+            // Multi-GPU warnings
+            if (gpuConfigs.length > 2) {
+                warnings.push('Multi-GPU scaling efficiency decreases with more than 2 GPUs');
+            }
+            
+            // Architecture-specific warnings
+            gpuConfigs.forEach(config => {
+                if (config.gpuModel && gpuSpecs[config.gpuModel].generation === 'Pascal') {
+                    warnings.push('Pascal architecture may have limited support for newer optimizations');
+                }
+            });
+
+            // Parameter size warnings
+            if (paramCount > 13) {
+                warnings.push('Models larger than 13B parameters may require multiple GPUs for optimal performance');
+            }
+
+            // Mixed architecture warnings
+            const generations = new Set(gpuConfigs.map(config => 
+                config.gpuModel ? gpuSpecs[config.gpuModel].generation : null
+            ).filter(Boolean));
+            if (generations.size > 1) {
+                warnings.push('Mixed GPU generations may result in reduced performance');
+            }
+
             // Calculate total tokens per second across all GPUs
             let totalTPS = 0;
             gpuConfigs.forEach(config => {
@@ -200,6 +233,7 @@ const OllamaGPUCalculator = () => {
                 .join(' + ');
 
             setResults({
+                ...ramCalc,
                 gpuRAM: ramCalc.totalGPURAM.toFixed(2),
                 systemRAM: ramCalc.totalSystemRAM.toFixed(2),
                 modelSize: ramCalc.baseModelSizeGB.toFixed(2),
@@ -209,7 +243,8 @@ const OllamaGPUCalculator = () => {
                 isCompatible: ramCalc.effectiveVRAM >= ramCalc.totalGPURAM,
                 isBorderline: ramCalc.vramMargin > 0 && ramCalc.vramMargin < 2,
                 gpuConfig: gpuConfigString,
-                tokensPerSecond: Math.round(Math.min(totalTPS, 200))
+                tokensPerSecond: Math.round(Math.min(totalTPS, 200)),
+                warnings: warnings  // Add warnings to results
             });
         } catch (error) {
             console.error('Calculation error:', error);
@@ -231,6 +266,18 @@ const OllamaGPUCalculator = () => {
             marginBottom: '10px'
         };
 
+        // Add warnings section if there are any
+        const warningsSection = results.warnings && results.warnings.length > 0 ? (
+            <div style={{ marginTop: '10px' }}>
+                <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>Warnings:</p>
+                <ul style={{ marginLeft: '20px', marginTop: '5px' }}>
+                    {results.warnings.map((warning, index) => (
+                        <li key={index}>{warning}</li>
+                    ))}
+                </ul>
+            </div>
+        ) : null;
+
         if (results.isCompatible && !results.isBorderline) {
             return (
                 <div style={{ ...baseStyles, backgroundColor: '#d1fae5', border: '1px solid #34d399' }}>
@@ -239,6 +286,7 @@ const OllamaGPUCalculator = () => {
                         Your GPU setup ({results.gpuConfig}) can handle this model with {results.vramMargin}GB VRAM to spare.
                         Estimated performance: {results.tokensPerSecond} tokens/second.
                     </p>
+                    {warningsSection}
                 </div>
             );
         } else if (results.isBorderline) {
@@ -249,6 +297,7 @@ const OllamaGPUCalculator = () => {
                         Your GPU setup will work but with only {results.vramMargin}GB VRAM margin. Consider reducing context length or using more GPUs for better performance.
                         Estimated performance: {results.tokensPerSecond} tokens/second.
                     </p>
+                    {warningsSection}
                 </div>
             );
         } else {
@@ -264,6 +313,7 @@ const OllamaGPUCalculator = () => {
                         <li>Reducing context length</li>
                         <li>Using a GPU with more VRAM</li>
                     </ul>
+                    {warningsSection}
                 </div>
             );
         }
