@@ -21,7 +21,8 @@ const OllamaGPUCalculator = () => {
     ]);
 
     const unsortedGpuSpecs = {
-        'h100': { name: 'H100', vram: 80, generation: 'Hopper', tflops: 1000 },
+        // GPU specifications with TFLOPS values in FP16/mixed precision
+        'h100': { name: 'H100', vram: 80, generation: 'Hopper', tflops: 989 },
         'a100-80gb': { name: 'A100 80GB', vram: 80, generation: 'Ampere', tflops: 312 },
         'a100-40gb': { name: 'A100 40GB', vram: 40, generation: 'Ampere', tflops: 312 },
         'a40': { name: 'A40', vram: 48, generation: 'Ampere', tflops: 149.8 },
@@ -40,6 +41,7 @@ const OllamaGPUCalculator = () => {
         'gtx1080ti': { name: 'GTX 1080 Ti', vram: 11, generation: 'Pascal', tflops: 11.3 },
         'gtx1070ti': { name: 'GTX 1070 Ti', vram: 8, generation: 'Pascal', tflops: 8.1 },
         'teslap40': { name: 'Tesla P40', vram: 24, generation: 'Pascal', tflops: 12 },
+        'teslap100': { name: 'Tesla P100', vram: 16, generation: 'Pascal', tflops: 9.3 },
         'gtx1070': { name: 'GTX 1070', vram: 8, generation: 'Pascal', tflops: 6.5 },
         'gtx1060': { name: 'GTX 1060', vram: 6, generation: 'Pascal', tflops: 4.4 },
         'm4': { name: 'Apple M4', vram: 16, generation: 'Apple Silicon', tflops: 4.6 },
