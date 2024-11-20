@@ -22,7 +22,7 @@ const OllamaGPUCalculator = () => {
 
     const unsortedGpuSpecs = {
         // GPU specifications with TFLOPS values in FP16/mixed precision
-        'h100': { name: 'H100', vram: 80, generation: 'Hopper', tflops: 989 },
+        'h100': { name: 'H100', vram: 80, generation: 'Hopper', tflops: 1979 },
         'a100-80gb': { name: 'A100 80GB', vram: 80, generation: 'Ampere', tflops: 312 },
         'a100-40gb': { name: 'A100 40GB', vram: 40, generation: 'Ampere', tflops: 312 },
         'a40': { name: 'A40', vram: 48, generation: 'Ampere', tflops: 149.8 },
