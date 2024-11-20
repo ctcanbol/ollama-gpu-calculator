@@ -82,7 +82,7 @@ const OllamaGPUCalculator = () => {
         const totalGPURAM = baseModelSizeGB + kvCacheSize + gpuOverhead;
 
         // Calculate system RAM requirements
-        const systemRAMMultiplier = quantBits <= 8 ? 1.2 : 1.5;
+        const systemRAMMultiplier = getSystemRAMMultiplier(quantBits);
         const totalSystemRAM = totalGPURAM * systemRAMMultiplier;
 
         // Calculate total available VRAM across all GPU configs
@@ -302,6 +302,17 @@ const OllamaGPUCalculator = () => {
         const newConfigs = [...gpuConfigs];
         newConfigs[index] = { ...newConfigs[index], [field]: value };
         setGpuConfigs(newConfigs);
+    };
+
+    // More accurate system RAM multipliers based on quantization
+    const getSystemRAMMultiplier = (quantBits) => {
+        switch(quantBits) {
+            case 32: return 2.0;    // FP32 needs more headroom
+            case 16: return 1.5;    // FP16 baseline
+            case 8:  return 1.2;    // INT8 more efficient
+            case 4:  return 1.1;    // INT4 most efficient
+            default: return 1.5;
+        }
     };
 
     return (
