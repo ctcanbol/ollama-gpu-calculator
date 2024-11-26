@@ -367,7 +367,54 @@ const OllamaGPUCalculator = () => {
 
     return (
         <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-            <h2 style={{ marginBottom: '30px' }}>Ollama GPU Compatibility Calculator</h2>
+            <h2 style={{ marginBottom: '10px' }}>Ollama GPU Compatibility Calculator</h2>
+            <br />
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '30px' }}>
+                <a 
+                    href="https://www.reddit.com/r/ollama/comments/1gdux20/ollama_gpu_compatibility_calculator/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center',
+                        color: '#FF4500',
+                        textDecoration: 'none',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        transition: 'background-color 0.2s',
+                        hover: {
+                            backgroundColor: '#f0f0f0'
+                        }
+                    }}
+                >
+                    <svg height="24" width="24" viewBox="0 0 24 24">
+                        <path fill="#FF4500" d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+                    </svg>
+                    <span style={{ marginLeft: '8px' }}>View on Reddit</span>
+                </a>
+                <a 
+                    href="https://github.com/aleibovici/ollama-gpu-calculator"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center',
+                        color: '#24292F',
+                        textDecoration: 'none',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        transition: 'background-color 0.2s',
+                        hover: {
+                            backgroundColor: '#f0f0f0'
+                        }
+                    }}
+                >
+                    <svg height="24" width="24" viewBox="0 0 16 16" version="1.1">
+                        <path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" fill="#24292F"/>
+                    </svg>
+                    <span style={{ marginLeft: '8px' }}>View on GitHub</span>
+                </a>
+            </div>
             <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
                 <div style={{ marginBottom: '20px' }}>
                     <label htmlFor="parameters" style={{ display: 'block', marginBottom: '5px', textAlign: 'left', fontSize: '16px' }}>Number of Parameters</label>
