@@ -45,9 +45,9 @@ const OllamaGPUCalculator = () => {
         'gtx1070': { name: 'GTX 1070', vram: 8, generation: 'Pascal', tflops: 6.5 },
         'gtx1060': { name: 'GTX 1060', vram: 6, generation: 'Pascal', tflops: 4.4 },
         'm4': { name: 'Apple M4', vram: 16, generation: 'Apple Silicon', tflops: 4.6 },
+        'm3-max': { name: 'Apple M3 Max', vram: 40, generation: 'Apple Silicon', tflops: 4.5 },
+        'm3-pro': { name: 'Apple M3 Pro', vram: 18, generation: 'Apple Silicon', tflops: 4.3 },
         'm3': { name: 'Apple M3', vram: 8, generation: 'Apple Silicon', tflops: 4.1 },
-        'm2': { name: 'Apple M2', vram: 8, generation: 'Apple Silicon', tflops: 3.6 },
-        'm1': { name: 'Apple M1', vram: 8, generation: 'Apple Silicon', tflops: 2.6 },
         'rx7900xtx': { name: 'Radeon RX 7900 XTX', vram: 24, generation: 'RDNA3', tflops: 61 },
         'rx7900xt': { name: 'Radeon RX 7900 XT', vram: 20, generation: 'RDNA3', tflops: 52 },
         'rx7900gre': { name: 'Radeon RX 7900 GRE', vram: 16, generation: 'RDNA3', tflops: 46 },
@@ -68,6 +68,9 @@ const OllamaGPUCalculator = () => {
     );
 
     const calculateRAMRequirements = (paramCount, quantBits, contextLength, gpuConfigs) => {
+        // Add minimum RAM check (8GB minimum required by Ollama)
+        const minimumSystemRAM = 8;
+        
         // Calculate base model size in GB
         const baseModelSizeGB = (paramCount * quantBits * 1000000000) / (8 * 1024 * 1024 * 1024);
 
@@ -100,6 +103,9 @@ const OllamaGPUCalculator = () => {
         const multiGpuEfficiency = totalAvailableVRAM > firstGpuVRAM ? 0.9 : 1;
         const effectiveVRAM = totalAvailableVRAM * multiGpuEfficiency;
 
+        // Add storage requirement calculation (approximately 10GB base + model size)
+        const storageRequired = 10 + baseModelSizeGB;
+        
         return {
             baseModelSizeGB,
             kvCacheSize,
@@ -107,7 +113,11 @@ const OllamaGPUCalculator = () => {
             totalSystemRAM,
             totalAvailableVRAM,
             effectiveVRAM,
-            vramMargin: totalAvailableVRAM - totalGPURAM
+            vramMargin: totalAvailableVRAM - totalGPURAM,
+            minimumSystemRAM,
+            storageRequired,
+            // Add warning if system requirements not met
+            systemRequirementsMet: totalSystemRAM >= minimumSystemRAM
         };
     };
 
@@ -627,6 +637,10 @@ const OllamaGPUCalculator = () => {
                     <li>Consider leaving 1-2GB VRAM margin for optimal performance</li>
                     <li>H100, A100, A40, and V100 GPUs are designed for data centers and may not be available for personal use</li>
                     <li>Tokens per second estimates are approximate and may vary based on specific model architecture and implementation</li>
+                    <li>Minimum system requirements: 8GB RAM, 10GB storage space</li>
+                    <li>Apple Silicon devices will utilize Neural Engine for additional performance</li>
+                    <li>Local execution ensures privacy and reduced latency</li>
+                    <li>Performance may vary based on model quantization and system capabilities</li>
                 </ul>
             </div>
         </div>
