@@ -68,8 +68,15 @@ const OllamaGPUCalculator = () => {
     );
 
     const calculateRAMRequirements = (paramCount, quantBits, contextLength, gpuConfigs) => {
-        // Add minimum RAM check (8GB minimum required by Ollama)
-        const minimumSystemRAM = 8;
+        // Add model size-based RAM requirements per Ollama docs
+        const getMinimumRAM = (paramCount) => {
+            if (paramCount <= 3) return 8;  // 3B models need 8GB
+            if (paramCount <= 7) return 16; // 7B models need 16GB
+            if (paramCount <= 13) return 32; // 13B models need 32GB
+            return 64; // 70B models need 64GB
+        };
+
+        const minimumSystemRAM = getMinimumRAM(paramCount);
         
         // Calculate base model size in GB
         const baseModelSizeGB = (paramCount * quantBits * 1000000000) / (8 * 1024 * 1024 * 1024);
@@ -106,6 +113,9 @@ const OllamaGPUCalculator = () => {
         // Add storage requirement calculation (approximately 10GB base + model size)
         const storageRequired = 10 + baseModelSizeGB;
         
+        // Add CPU core requirements
+        const recommendedCores = paramCount > 13 ? 8 : 4;
+        
         return {
             baseModelSizeGB,
             kvCacheSize,
@@ -116,6 +126,7 @@ const OllamaGPUCalculator = () => {
             vramMargin: totalAvailableVRAM - totalGPURAM,
             minimumSystemRAM,
             storageRequired,
+            recommendedCores,
             // Add warning if system requirements not met
             systemRequirementsMet: totalSystemRAM >= minimumSystemRAM
         };
@@ -268,6 +279,36 @@ const OllamaGPUCalculator = () => {
 
     const getCompatibilityMessage = () => {
         if (!results) return null;
+        
+        let warnings = [];
+        
+        // Add model size-specific warnings
+        if (parameters <= 3) {
+            warnings.push('3B model: Minimum 8GB RAM recommended');
+        } else if (parameters <= 7) {
+            warnings.push('7B model: Minimum 16GB RAM recommended');
+        } else if (parameters <= 13) {
+            warnings.push('13B model: Minimum 32GB RAM recommended');
+        } else {
+            warnings.push('70B model: Minimum 64GB RAM recommended');
+        }
+        
+        // Add OS-specific warnings
+        if (gpuConfigs.some(config => config.gpuModel?.includes('rx'))) {
+            warnings.push('AMD GPUs are currently only supported on Linux with ROCm');
+        }
+
+        // Add quantization-specific warnings
+        if (quantization === '4') {
+            warnings.push('4-bit quantization provides fastest inference but may impact model accuracy');
+        } else if (quantization === '8') {
+            warnings.push('8-bit quantization offers good balance of speed and accuracy');
+        }
+
+        // Add context length warnings
+        if (contextLength > 32768) {
+            warnings.push('Extended context length requires significantly more VRAM and may impact performance');
+        }
 
         const baseStyles = {
             textAlign: 'left',
@@ -277,11 +318,11 @@ const OllamaGPUCalculator = () => {
         };
 
         // Add warnings section if there are any
-        const warningsSection = results.warnings && results.warnings.length > 0 ? (
+        const warningsSection = warnings.length > 0 ? (
             <div style={{ marginTop: '10px' }}>
                 <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>Warnings:</p>
                 <ul style={{ marginLeft: '20px', marginTop: '5px' }}>
-                    {results.warnings.map((warning, index) => (
+                    {warnings.map((warning, index) => (
                         <li key={index}>{warning}</li>
                     ))}
                 </ul>
@@ -641,6 +682,12 @@ const OllamaGPUCalculator = () => {
                     <li>Apple Silicon devices will utilize Neural Engine for additional performance</li>
                     <li>Local execution ensures privacy and reduced latency</li>
                     <li>Performance may vary based on model quantization and system capabilities</li>
+                    <li>Supported OS: Linux (Ubuntu 18.04+), macOS (11+), Windows (via WSL2)</li>
+                    <li>CPU: 4+ cores recommended, 8+ cores for 13B+ models</li>
+                    <li>AMD GPUs require Linux with ROCm support</li>
+                    <li>Models can be run in both 'generate' and 'embedding' modes if supported</li>
+                    <li>Default context length is 4096 tokens</li>
+                    <li>Consider using lower quantization (4-bit/8-bit) for better performance on limited hardware</li>
                 </ul>
             </div>
         </div>
