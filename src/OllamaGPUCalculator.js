@@ -21,38 +21,38 @@ const OllamaGPUCalculator = () => {
     ]);
 
     const unsortedGpuSpecs = {
-        // GPU specifications with TFLOPS values in FP16/mixed precision
-        'h100': { name: 'H100', vram: 80, generation: 'Hopper', tflops: 1979 },
-        'a100-80gb': { name: 'A100 80GB', vram: 80, generation: 'Ampere', tflops: 312 },
-        'a100-40gb': { name: 'A100 40GB', vram: 40, generation: 'Ampere', tflops: 312 },
-        'a40': { name: 'A40', vram: 48, generation: 'Ampere', tflops: 149.8 },
-        'v100-32gb': { name: 'V100 32GB', vram: 32, generation: 'Volta', tflops: 125 },
-        'v100-16gb': { name: 'V100 16GB', vram: 16, generation: 'Volta', tflops: 125 },
-        'rtx4090': { name: 'RTX 4090', vram: 24, generation: 'Ada Lovelace', tflops: 82.6 },
-        'rtx4080': { name: 'RTX 4080', vram: 16, generation: 'Ada Lovelace', tflops: 65 },
-        'rtx3090ti': { name: 'RTX 3090 Ti', vram: 24, generation: 'Ampere', tflops: 40 },
-        'rtx3090': { name: 'RTX 3090', vram: 24, generation: 'Ampere', tflops: 35.6 },
-        'rtx3080ti': { name: 'RTX 3080 Ti', vram: 12, generation: 'Ampere', tflops: 34.1 },
-        'rtx3080': { name: 'RTX 3080', vram: 10, generation: 'Ampere', tflops: 29.8 },
-        'a6000': { name: 'A6000', vram: 48, generation: 'Ampere', tflops: 38.7 },
-        'a5000': { name: 'A5000', vram: 24, generation: 'Ampere', tflops: 27.8 },
-        'a4000': { name: 'A4000', vram: 16, generation: 'Ampere', tflops: 19.2 },
-        'rtx4060ti': { name: 'RTX 4060 Ti', vram: 8, generation: 'Ada Lovelace', tflops: 22.1 },
-        'gtx1080ti': { name: 'GTX 1080 Ti', vram: 11, generation: 'Pascal', tflops: 11.3 },
-        'gtx1070ti': { name: 'GTX 1070 Ti', vram: 8, generation: 'Pascal', tflops: 8.1 },
-        'teslap40': { name: 'Tesla P40', vram: 24, generation: 'Pascal', tflops: 12 },
-        'teslap100': { name: 'Tesla P100', vram: 16, generation: 'Pascal', tflops: 9.3 },
-        'gtx1070': { name: 'GTX 1070', vram: 8, generation: 'Pascal', tflops: 6.5 },
-        'gtx1060': { name: 'GTX 1060', vram: 6, generation: 'Pascal', tflops: 4.4 },
-        'm4': { name: 'Apple M4', vram: 16, generation: 'Apple Silicon', tflops: 4.6 },
-        'm3-max': { name: 'Apple M3 Max', vram: 40, generation: 'Apple Silicon', tflops: 4.5 },
-        'm3-pro': { name: 'Apple M3 Pro', vram: 18, generation: 'Apple Silicon', tflops: 4.3 },
-        'm3': { name: 'Apple M3', vram: 8, generation: 'Apple Silicon', tflops: 4.1 },
-        'rx7900xtx': { name: 'Radeon RX 7900 XTX', vram: 24, generation: 'RDNA3', tflops: 61 },
-        'rx7900xt': { name: 'Radeon RX 7900 XT', vram: 20, generation: 'RDNA3', tflops: 52 },
-        'rx7900gre': { name: 'Radeon RX 7900 GRE', vram: 16, generation: 'RDNA3', tflops: 46 },
-        'rx7800xt': { name: 'Radeon RX 7800 XT', vram: 16, generation: 'RDNA3', tflops: 37 },
-        'rx7700xt': { name: 'Radeon RX 7700 XT', vram: 12, generation: 'RDNA3', tflops: 35 },
+        // GPU specifications with TFLOPS values in FP16/mixed precision and TDP in watts
+        'h100': { name: 'H100', vram: 80, generation: 'Hopper', tflops: 1979, tdp: 700 },  // Correct: 700W SXM
+        'a100-80gb': { name: 'A100 80GB', vram: 80, generation: 'Ampere', tflops: 312, tdp: 400 },  // Correct: 400W SXM
+        'a100-40gb': { name: 'A100 40GB', vram: 40, generation: 'Ampere', tflops: 312, tdp: 400 },  // Correct: 400W SXM
+        'a40': { name: 'A40', vram: 48, generation: 'Ampere', tflops: 149.8, tdp: 300 },  // Correct: 300W
+        'v100-32gb': { name: 'V100 32GB', vram: 32, generation: 'Volta', tflops: 125, tdp: 300 },  // Correct: 300W SXM2
+        'v100-16gb': { name: 'V100 16GB', vram: 16, generation: 'Volta', tflops: 125, tdp: 300 },  // Correct: 300W SXM2
+        'rtx4090': { name: 'RTX 4090', vram: 24, generation: 'Ada Lovelace', tflops: 82.6, tdp: 450 },  // Correct: 450W
+        'rtx4080': { name: 'RTX 4080', vram: 16, generation: 'Ada Lovelace', tflops: 65, tdp: 320 },  // Correct: 320W
+        'rtx3090ti': { name: 'RTX 3090 Ti', vram: 24, generation: 'Ampere', tflops: 40, tdp: 450 },  // Correct: 450W
+        'rtx3090': { name: 'RTX 3090', vram: 24, generation: 'Ampere', tflops: 35.6, tdp: 350 },  // Correct: 350W
+        'rtx3080ti': { name: 'RTX 3080 Ti', vram: 12, generation: 'Ampere', tflops: 34.1, tdp: 350 },  // Correct: 350W
+        'rtx3080': { name: 'RTX 3080', vram: 10, generation: 'Ampere', tflops: 29.8, tdp: 320 },  // Correct: 320W
+        'a6000': { name: 'A6000', vram: 48, generation: 'Ampere', tflops: 38.7, tdp: 300 },  // Correct: 300W
+        'a5000': { name: 'A5000', vram: 24, generation: 'Ampere', tflops: 27.8, tdp: 230 },  // Correct: 230W
+        'a4000': { name: 'A4000', vram: 16, generation: 'Ampere', tflops: 19.2, tdp: 140 },  // Correct: 140W
+        'rtx4060ti': { name: 'RTX 4060 Ti', vram: 8, generation: 'Ada Lovelace', tflops: 22.1, tdp: 160 },  // Correct: 160W
+        'gtx1080ti': { name: 'GTX 1080 Ti', vram: 11, generation: 'Pascal', tflops: 11.3, tdp: 250 },  // Correct: 250W
+        'gtx1070ti': { name: 'GTX 1070 Ti', vram: 8, generation: 'Pascal', tflops: 8.1, tdp: 180 },  // Correct: 180W
+        'teslap40': { name: 'Tesla P40', vram: 24, generation: 'Pascal', tflops: 12, tdp: 250 },  // Correct: 250W
+        'teslap100': { name: 'Tesla P100', vram: 16, generation: 'Pascal', tflops: 9.3, tdp: 250 },  // Correct: 250W PCIe
+        'gtx1070': { name: 'GTX 1070', vram: 8, generation: 'Pascal', tflops: 6.5, tdp: 150 },  // Correct: 150W
+        'gtx1060': { name: 'GTX 1060', vram: 6, generation: 'Pascal', tflops: 4.4, tdp: 120 },  // Correct: 120W
+        'm4': { name: 'Apple M4', vram: 16, generation: 'Apple Silicon', tflops: 4.6, tdp: 30 },  // Estimated: Not released yet
+        'm3-max': { name: 'Apple M3 Max', vram: 40, generation: 'Apple Silicon', tflops: 4.5, tdp: 92 },  // Updated: ~92W max package power
+        'm3-pro': { name: 'Apple M3 Pro', vram: 18, generation: 'Apple Silicon', tflops: 4.3, tdp: 67 },  // Updated: ~67W max package power
+        'm3': { name: 'Apple M3', vram: 8, generation: 'Apple Silicon', tflops: 4.1, tdp: 45 },  // Updated: ~45W max package power
+        'rx7900xtx': { name: 'Radeon RX 7900 XTX', vram: 24, generation: 'RDNA3', tflops: 61, tdp: 355 },  // Correct: 355W
+        'rx7900xt': { name: 'Radeon RX 7900 XT', vram: 20, generation: 'RDNA3', tflops: 52, tdp: 315 },  // Correct: 315W
+        'rx7900gre': { name: 'Radeon RX 7900 GRE', vram: 16, generation: 'RDNA3', tflops: 46, tdp: 260 },  // Correct: 260W
+        'rx7800xt': { name: 'Radeon RX 7800 XT', vram: 16, generation: 'RDNA3', tflops: 37, tdp: 263 },  // Correct: 263W
+        'rx7700xt': { name: 'Radeon RX 7700 XT', vram: 12, generation: 'RDNA3', tflops: 35, tdp: 245 },  // Correct: 245W
     };
 
     const gpuSpecs = Object.fromEntries(
@@ -160,6 +160,68 @@ const OllamaGPUCalculator = () => {
         return Math.round(Math.min(totalTPS, 200));
     };
 
+    const calculatePowerConsumption = (gpuConfigs, paramCount, quantization) => {
+        let totalPower = 0;
+        let powerDetails = [];
+
+        // Calculate base system overhead based on model size
+        const getBaseSystemOverhead = (paramCount) => {
+            if (paramCount <= 3) return 75;  // Small models
+            if (paramCount <= 7) return 100; // Medium models
+            if (paramCount <= 13) return 150; // Large models
+            return 200; // Very large models
+        };
+
+        // Get GPU utilization factor based on quantization
+        const getUtilizationFactor = (quantization) => {
+            switch(quantization) {
+                case '32': return 0.85;  // FP32 uses more power
+                case '16': return 0.75;  // FP16 baseline
+                case '8': return 0.65;   // INT8 more efficient
+                case '4': return 0.60;   // INT4 most efficient
+                default: return 0.75;
+            }
+        };
+
+        const utilizationFactor = getUtilizationFactor(quantization);
+        const baseSystemOverhead = getBaseSystemOverhead(paramCount);
+        let systemOverhead = baseSystemOverhead;
+
+        gpuConfigs.forEach(config => {
+            if (config.gpuModel) {
+                const gpu = gpuSpecs[config.gpuModel];
+                const numGPUs = parseInt(config.count);
+                
+                // Calculate power for each GPU with utilization factor
+                const gpuPower = Math.round(gpu.tdp * utilizationFactor);
+                
+                // Add multi-GPU overhead (10% extra per additional GPU)
+                const multiGpuOverhead = numGPUs > 1 ? (numGPUs - 1) * 0.1 * gpuPower : 0;
+                const totalGpuPower = Math.round((gpuPower * numGPUs) + multiGpuOverhead);
+                
+                totalPower += totalGpuPower;
+                powerDetails.push({
+                    name: gpu.name,
+                    count: numGPUs,
+                    power: totalGpuPower,
+                    baseWatts: gpuPower
+                });
+
+                // Increase system overhead for multi-GPU setups
+                systemOverhead += (numGPUs - 1) * 25; // Additional overhead per GPU
+            }
+        });
+
+        totalPower += systemOverhead;
+
+        return {
+            totalPower: Math.round(totalPower),
+            powerDetails,
+            systemOverhead,
+            utilizationFactor
+        };
+    };
+
     const calculateOllamaRAM = () => {
         // Input validation
         if (!parameters || isNaN(parameters) || parameters <= 0) {
@@ -199,6 +261,9 @@ const OllamaGPUCalculator = () => {
                 contextLength,
                 gpuConfigs
             );
+
+            // Calculate power consumption
+            const powerCalc = calculatePowerConsumption(gpuConfigs, paramCount, quantization);
 
             // Generate warnings based on configuration
             let warnings = [];
@@ -265,7 +330,8 @@ const OllamaGPUCalculator = () => {
                 isBorderline: ramCalc.vramMargin > 0 && ramCalc.vramMargin < 2,
                 gpuConfig: gpuConfigString,
                 tokensPerSecond: Math.round(Math.min(totalTPS, 200)),
-                warnings: warnings  // Add warnings to results
+                warnings: warnings,
+                powerConsumption: powerCalc  // Add power consumption to results
             });
         } catch (error) {
             console.error('Calculation error:', error);
@@ -665,6 +731,22 @@ const OllamaGPUCalculator = () => {
                                 </p>
                             </div>
                         )}
+                        <div style={{ marginBottom: '20px', marginTop: '20px' }}>
+                            <label style={{ fontSize: '14px', fontWeight: 'normal', marginBottom: '2px', display: 'block' }}>
+                                Estimated Power Consumption:
+                            </label>
+                            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#dc2626', margin: '0 0 10px 0' }}>
+                                {results.powerConsumption.totalPower}W
+                            </p>
+                            <div style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.2', marginTop: '8px' }}>
+                                {results.powerConsumption.powerDetails.map((detail, index) => (
+                                    <p key={index} style={{ margin: '0' }}>
+                                        {detail.count}x {detail.name}: {detail.power}W ({detail.baseWatts}W per GPU at {Math.round(results.powerConsumption.utilizationFactor * 100)}% utilization)
+                                    </p>
+                                ))}
+                                <p style={{ margin: '0' }}>System Overhead: {results.powerConsumption.systemOverhead}W</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -688,6 +770,9 @@ const OllamaGPUCalculator = () => {
                     <li>Models can be run in both 'generate' and 'embedding' modes if supported</li>
                     <li>Default context length is 4096 tokens</li>
                     <li>Consider using lower quantization (4-bit/8-bit) for better performance on limited hardware</li>
+                    <li>Power consumption estimates account for GPU utilization patterns during LLM inference</li>
+                    <li>Power usage varies based on quantization level and model size</li>
+                    <li>Multi-GPU setups include additional power overhead for inter-GPU communication</li>
                 </ul>
             </div>
         </div>
