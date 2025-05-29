@@ -6,7 +6,6 @@ import Analytics from './components/Analytics';
 function App() {
   return (
     <div className="App">
-      <Analytics />
       <OllamaGPUCalculator />
     </div>
   );
